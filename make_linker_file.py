@@ -38,11 +38,12 @@ def parseStorageTypeName(root, variableObj):
 
 def parseModuleName(storageType, variableObj):
     for moduleName in storageType:
-        #print(moduleName.tag)
-        variableObj.moduleName=moduleName.tag
-        appendInLinkerFile(getModuleNameCommentString(variableObj),variableObj)
-        parseSymbolName(moduleName, variableObj)
-        appendInLinkerFile(variableObj.constantObj.NEWLINE,variableObj)
+        if(moduleName.tag != "formulas"):                             # to ignore formulas tag
+            #print(moduleName.tag)
+            variableObj.moduleName=moduleName.tag
+            appendInLinkerFile(getModuleNameCommentString(variableObj),variableObj)
+            parseSymbolName(moduleName, variableObj)
+            appendInLinkerFile(variableObj.constantObj.NEWLINE,variableObj)
 
 def parseSymbolName(moduleName, variableObj):
     for symbolName in moduleName:
