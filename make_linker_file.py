@@ -38,11 +38,12 @@ def parseStorageTypeName(root, variableObj):
 
 def parseModuleName(storageType, variableObj):
     for moduleName in storageType:
-        #print(moduleName.tag)
-        variableObj.moduleName=moduleName.tag
-        appendInLinkerFile(getModuleNameCommentString(variableObj),variableObj)
-        parseSymbolName(moduleName, variableObj)
-        appendInLinkerFile(variableObj.constantObj.NEWLINE,variableObj)
+        if(moduleName.tag != "formulas"):                             # to ignore formulas tag
+            #print(moduleName.tag)
+            variableObj.moduleName=moduleName.tag
+            appendInLinkerFile(getModuleNameCommentString(variableObj),variableObj)
+            parseSymbolName(moduleName, variableObj)
+            appendInLinkerFile(variableObj.constantObj.NEWLINE,variableObj)
 
 def parseSymbolName(moduleName, variableObj):
     for symbolName in moduleName:
@@ -103,7 +104,7 @@ def appendInLinkerFile(currentLine,variableObj):
 
 
 def main():
-    infile=open("Data.xml","r")
+    infile=open("original data.xml","r")
     root = ET.fromstring(infile.read())
     variableObj = Variables()    #Creating object of Variables Class
     parseStorageTypeName(root,variableObj)
