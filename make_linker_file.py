@@ -1,7 +1,18 @@
+# -*- coding: utf-8 -*-
+#---------------------------------------------------------------------------
+# This file reads the XML file and generates the Linker file(.icf) files.
+
+"""ABOUT THE KEYWORDS(VariableName):
+    storageType is the type of storage such as ROM ,RAM ,NV .
+    moduleName is the type of module such as bootloader,system,module1.....module4 etc..
+    symbolName is the symbols in the module such as region16_start,region16_end ... etc.
+    address is the actual address
+"""
+
 import xml.etree.ElementTree as ET
 
 
-
+##############################################################This class contains all the constants used in the program#############################
 class Constants:
     def __init__(self):
         self.OPENCOMMENT = "/*** "
@@ -18,6 +29,8 @@ class Constants:
         self.EXTENSION = ".icf"
         self.SPECIALADRESSES= "Special Adresses"
 
+##########################################################This class contains all the variables that are used in the file########################
+
 class Variables:
     storageType = ""
     moduleName = ""
@@ -25,36 +38,38 @@ class Variables:
     address = ""
     symbolOrExported = ""
     constantObj=Constants()
+    addressICF=""
 
-
-def parseStorageTypeName(root, variableObj):
+################################################################## Parsing Storage Name###################################################
+def parseStorageTypeName(root, variableObj,addressICF):
+    variableObj.addressICF = addressICF
     for storageType in root:
         #print(storageType.tag)
         variableObj.storageType=storageType.tag
-        createEmptyLinkerFile(storageType,variableObj)
+        createEmptyLinkerFile(storageType,variableObj)                                      #creating new .icf file for each storageType
         appendInLinkerFile(getHeaderWarningString(variableObj),variableObj)
         parseModuleName(storageType, variableObj)
 
-
+################################################################Parsing Module Name  ########################################################
 def parseModuleName(storageType, variableObj):
     for moduleName in storageType:
-        if(moduleName.tag != "formulas"):                             # to ignore formulas tag
+        if(moduleName.tag != "Meta_Data"):                             # to ignore Meta_Data tag
             #print(moduleName.tag)
             variableObj.moduleName=moduleName.tag
             appendInLinkerFile(getModuleNameCommentString(variableObj),variableObj)
             parseSymbolName(moduleName, variableObj)
             appendInLinkerFile(variableObj.constantObj.NEWLINE,variableObj)
 
+#####################################################################parsing Symbol Name###################################################
 def parseSymbolName(moduleName, variableObj):
     for symbolName in moduleName:
         #print(symbolName.tag)
         #print(moduleName.find(symbolName.tag).text)
         variableObj.symbolName=symbolName.tag
-        variableObj.address=moduleName.find(symbolName.tag).text
+        variableObj.address=moduleName.find(symbolName.tag).text             #this line gives the address stored in the symbol
         setSymbolOrExportedVariable(symbolName,variableObj)
         appendInLinkerFile(getModuleLineString(variableObj),variableObj)
         #parseSymbolOrExported(symbolName, variableObj)
-
 
 def setSymbolOrExportedVariable(symbolName,variableObj):
     if(isExportedInNode(symbolName,variableObj)):
@@ -62,6 +77,10 @@ def setSymbolOrExportedVariable(symbolName,variableObj):
     else:
         variableObj.symbolOrExported =variableObj.constantObj.SYMBOL
 
+
+###################################################################################################################################################
+####################################################Formating the data for the linker file#########################################################
+####################################################################################################################################################
 #------------------------------------------to check if <exported> tag exists----------------------------------------------------#
 def isExportedInNode(symbolName,variableObj):
     if(list(symbolName)):
@@ -93,21 +112,24 @@ def getModuleLineString(variableObj):
 
 #---------------------------To empty the existing linker file and create linker file if it doesn't exists-------------------------#
 def createEmptyLinkerFile(storageType,variableObj):
-    path = variableObj.storageType + variableObj.constantObj.EXTENSION
+    path = variableObj.addressICF + variableObj.storageType + variableObj.constantObj.EXTENSION
     outfile=open(path,'w')
 
 #--------------------------------------------To append data in linker file------------------------------------------------------#
 def appendInLinkerFile(currentLine,variableObj):
-    path = variableObj.storageType + variableObj.constantObj.EXTENSION
+    path = variableObj.addressICF + variableObj.storageType + variableObj.constantObj.EXTENSION
     outfile=open(path,'a')
     outfile.write(currentLine)
 
 
+############################################################ MAIN FUNCTION##########################################################################
 def main():
-    infile=open("original data.xml","r")
+    addressXML ="Data.xml"
+    addressICF =""
+    infile=open(addressXML,"r")
     root = ET.fromstring(infile.read())
     variableObj = Variables()    #Creating object of Variables Class
-    parseStorageTypeName(root,variableObj)
+    parseStorageTypeName(root,variableObj,addressICF)
 
 
 if __name__ == "__main__":
